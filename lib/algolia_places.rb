@@ -15,7 +15,7 @@ class AlgoliaPlaces
     def_delegators :instance, :coordinates, :coordinates
     def_delegators :instance, :hits, :hits
     def_delegators :instance, :configuration, :configuration
-    
+
     def root
       File.expand_path '../..', __FILE__
     end
@@ -26,8 +26,8 @@ class AlgoliaPlaces
   attr_writer :logger
   attr_accessor :rest_exception
 
-  alias :rest_exception? :rest_exception 
-  
+  alias :rest_exception? :rest_exception
+
   # Configure AlgoliaPlaces
   # @param [Hash] opts the options to configure AlgoliaPlaces
   # @option opts [String] :app_id Algolia App Id for PLACES
@@ -54,10 +54,10 @@ class AlgoliaPlaces
       end
     end
   end
-  
-  def hits(query)
+
+  def hits(query, opts = {})
     begin
-      resp = retrieve_query(query)
+      resp = retrieve_query(query, opts)
       hits_response(resp)
     rescue RestClient::ExceptionWithResponse => err
       if self.rest_exception?
@@ -70,7 +70,7 @@ class AlgoliaPlaces
   end
 
   protected
-  
+
   def hits_response(resp)
     JsonPath.new('$.hits').on(resp.body).first
   end
@@ -89,9 +89,11 @@ class AlgoliaPlaces
     [0,0]
   end
 
-  def retrieve_query(query)
+  def retrieve_query(query, opts = {})
     RestClient.post(URL,
-                    { query: query }.to_json,
+                    {
+                      query: query
+                    }.merge(opts).to_json,
                     {
                       'X-Algolia-Application-Id' => self.app_id,
                       'X-Algolia-API-Key' => self.api_key,
@@ -105,13 +107,13 @@ class AlgoliaPlaces
   def api_key
     @api_key||= ENV['ALGOLIA_API_KEY']
   end
-  
+
   def logger
     @logger||= setup_logger
   end
-  
+
   private
-  
+
   def setup_logger
     log = Logger.new(STDOUT)
     log.level = Logger::INFO
